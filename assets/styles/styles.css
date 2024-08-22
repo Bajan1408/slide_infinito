@@ -1,0 +1,151 @@
+*, ::before, ::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    background-color: #1f2029;
+}
+
+.wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.slide-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.slide-list {
+    display: flex;
+}
+
+.slide-content {
+    border: 1px solid #fff;
+    border-radius: .5rem;
+    box-shadow: #070707 0 .6rem .7rem;
+    position: relative;
+}
+
+.slide-item {
+    cursor: grab;
+    flex-shrink: 0;
+    padding: 0 0.5rem;
+    width: 90vw;
+}
+
+.slide-item img {
+    width: 100%;
+    border-radius: .5rem;
+}
+
+.slide-description {
+    background: linear-gradient(to top, #000, transparent);
+    color: #fff;
+    position: absolute;
+    padding: 1rem;
+    bottom: 0;
+    width: 100%;
+    border-radius: .5rem;
+}
+
+.slide-description h3 {
+    font-family: 'Koulen', sans-serif;
+    font-size: 2rem;
+    position: relative;
+    top: .85rem;
+}
+
+.slide-description p {
+    font-family: 'PT Sans', sans-serif;
+    font-size: 1rem;
+}
+
+.slide-nav-button {
+    position: absolute;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font-size: 2rem;
+    z-index: 1;
+    border: transparent;
+    
+}
+
+.slide-nav-previous {
+    left: 0.20rem;
+    top: 6rem;
+}
+
+.slide-nav-next {
+    right: 0.20rem;
+    top: 6rem;
+}
+
+.slide-controls {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1.5rem auto;
+}
+
+.slide-control-button {
+    background: transparent;
+    cursor: pointer;
+    color: #fff;
+    border: none;
+}
+
+.slide-control-button.active {
+    color: #cd8cf5;
+}
+
+@media screen and (max-width: 768px) {
+    .slide-description {
+        background: linear-gradient(to top, #000, transparent);
+        color: #fff;
+        position: absolute;
+        padding: .5rem;
+        bottom: 0;
+        
+        border-radius: .5rem;
+    }
+
+    .slide-description h3 {
+        font-size: 1rem;
+        top: 0;
+    }
+
+    .slide-description p {
+        display: none;
+    }
+
+    .slide-nav-button {
+        font-size: 1.3rem;
+    }
+
+    .slide-nav-previous {
+        left: 0.20rem;
+        top: 2.4rem;
+    }
+    
+    .slide-nav-next {
+        right: 0.20rem;
+        top: 2.4rem;
+    }
+
+    .slide-controls {
+        gap: 1rem;
+        margin: .9rem auto;
+    }
+}
