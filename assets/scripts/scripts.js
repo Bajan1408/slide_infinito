@@ -6,7 +6,7 @@ const navPreviousButton = document.querySelector('[data-slide="nav-previous-butt
 const navNextButton = document.querySelector('[data-slide="nav-next-button"]');
 const slideItems = document.querySelectorAll('[data-slide="item"]');
 const controlsWrapper = document.querySelector('[data-slide="controls-wrapper"]');
-const controlButtons = document.querySelectorAll('[data-slide="control-button"]');
+let controlButtons;
 
 const state = {
     startingPoint: 0,
@@ -30,27 +30,32 @@ function getCenterPosition({ index }) {
     return position;
 }
 
-function setVisibleSlide({ index }) {
+function setVisibleSlide({ index, animate }) {
     // const slideItem = slideItems[index];
     // const slideWidth = slideItem.clientWidth;
     // const windowWidth = document.body.clientWidth;
     // const margin = (windowWidth - slideWidth) / 2;
     //const position = margin - (index * slideWidth);
+    if(index === 0 || index === slideItems.length - 1) {
+        index = state.currentSlideIndex;
+    }
     const position = getCenterPosition({ index });
     state.currentSlideIndex = index;
+    slideList.style.transition = animate === true ? `transform .7s` : `none`;
+    activeControlButton({ index });
     translateSlide({ position: position });
 }
 
 function nextSlide() {
-    setVisibleSlide({ index: state.currentSlideIndex + 1 });
+    setVisibleSlide({ index: state.currentSlideIndex + 1, animate: true });
 }
 
 function previousSlide() {
-    setVisibleSlide({ index: state.currentSlideIndex - 1 });
+    setVisibleSlide({ index: state.currentSlideIndex - 1, animate: true });
 }
 
 function currentSlide() {
-    setVisibleSlide({ index: state.currentSlideIndex });
+    setVisibleSlide({ index: state.currentSlideIndex, animate: true });
 }
 
 function createControlButtons() {
@@ -64,12 +69,34 @@ function createControlButtons() {
     })
 }
 
+function activeControlButton({ index }) {
+    const controlButton = controlButtons[index];
+    controlButtons.forEach((contolButtonItem) => {
+        contolButtonItem.classList.remove('active');
+    })
+    controlButton.classList.add('active');
+}
+
+function createSlideClones() {
+    //fazendo uma clonagem profunda dos elementos (deep clone)
+    const firstSlide = slideItems[0].cloneNode(true);
+    const secondtSlide = slideItems[1].cloneNode(true);
+    const lastSlide = slideItems[slideItems.length - 1].cloneNode(true);
+    const penultimateSlide = slideItems[slideItems.length - 2].cloneNode(true);
+
+    slideItems.appendChild(firstSlide);
+    slideItems.appendChild(secondtSlide);
+    slideItems.appendChild(lastSlide);
+    slideItems.appendChild(penultimateSlide);
+}
+
 function onMouseDown(event, index) {
     const item = event.currentTarget;
     state.startingPoint = event.clientX;
     state.currentPoint = event.clientX - state.savedPositionMouse;
     state.currentSlideIndex = index;
-    console.log('Eu sou o index do mousedown ', state.currentSlideIndex);
+    slideList.style.transition = `none`;
+    //console.log('Eu sou o index do mousedown ', state.currentSlideIndex);
     //console.log('Eu sou o event.clientX, pixel do mousedown', event.clientX);
     //console.log('apertei o botão do mouse');
     item.addEventListener('mousemove', onMouseMove);
@@ -118,20 +145,54 @@ function onMouseUp(event) {
 
 }
 
-slideItems.forEach((item, index) => {
-    item.addEventListener('dragstart', (event) => {
-        event.preventDefault();
+function onControlButtonClick(index) {
+    setVisibleSlide({ index, animate: true });
+}
+
+function onSlideListTransitionEnd() {
+    if(state.currentSlideIndex === (slideItems.length - 2)) {
+        setVisibleSlide({ index: 2, animate: false });
+    } 
+    if(state.currentSlideIndex === 1) {
+        setVisibleSlide({ index: (slideItems.length - 2), animate: false });
+    } 
+}
+
+function setListeners() {
+    controlButtons = document.querySelectorAll('[data-slide="control-button"]');
+
+    controlButtons.forEach((controlButton, index) => {
+        controlButton.addEventListener('click', (event) => {
+            onControlButtonClick(index);
+        })
     })
-    item.addEventListener('mousedown', (event) => {
-        onMouseDown(event, index);
+
+    slideItems.forEach((item, index) => {
+        item.addEventListener('dragstart', (event) => {
+            event.preventDefault();
+        })
+        item.addEventListener('mousedown', (event) => {
+            onMouseDown(event, index);
+        })
+        
+        item.addEventListener('mouseup', onMouseUp);
     })
     
-    item.addEventListener('mouseup', onMouseUp);
-})
+    navNextButton.addEventListener('click', nextSlide);
+    navPreviousButton.addEventListener('click', previousSlide);
+    slideList.addEventListener('transitionend', onSlideListTransitionEnd);
 
-navNextButton.addEventListener('click', nextSlide);
-navPreviousButton.addEventListener('click', previousSlide);
+}
 
-setVisibleSlide({ index: 0 });
-createControlButtons();
+function initSlider() {
+    createControlButtons();
+    setListeners();
+    createSlideClones();
+    setVisibleSlide({ index: 2, animate: true });
+}
+
+initSlider();
+
+
+
 
