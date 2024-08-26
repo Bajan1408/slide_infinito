@@ -133,17 +133,18 @@ function onMouseMove(event) {
 }
 
 function onMouseUp(event) {
+    const pointsToMove = event.type.includes('touch') ? 50 : 150;
     const item = event.currentTarget;
-    const slideWidth = item.clientWidth;
+    const slideItem = event.currentTarget;
     
-    if(state.movement < -150) {
+    if(state.movement < -pointsToMove) {
         nextSlide();
         //setVisibleSlide({ index: state.currentSlideIndex + 1 });
         //const position = (state.currentSlideIndex + 1) * slideWidth;
         //translateSlide({ position: -position });
         //slideList.style.transform = `translateX(-${position}px)`;
         //state.savedPositionMouse = -position;
-    } else if(state.movement > 150) {
+    } else if(state.movement > pointsToMove) {
         previousSlide();
         //setVisibleSlide({ index: state.currentSlideIndex - 1 });
         //const position = (state.currentSlideIndex - 1) * slideWidth;
@@ -163,15 +164,34 @@ function onMouseUp(event) {
 
 }
 
+function onTouchStart(event, index) {
+    event.clientX = event.touches[0].clientX;
+    onMouseDown(event, index);
+    const slideItem = event.currentTarget;
+    slideItem.addEventListener('touchmove', onTouchMove);
+}
+
+function onTouchMove(event) {
+    event.clientX = event.touches[0].clientX;
+    onMouseMove(event);
+}
+
+function onTouchEnd(event) {
+    onMouseUp(event);
+    const slideItem = event.currentTarget;
+    slideItem.removeEventListener('touchmove', onTouchMove);
+}
+
 function onControlButtonClick(index) {
     setVisibleSlide({ index: index + 2, animate: true });
 }
 
 function onSlideListTransitionEnd() {
-    if(state.currentSlideIndex === (slideItems.length - 2)) {
+    const slideItem = slideItems[state.currentSlideIndex];
+    if(slideItem.classList.contains('slide-cloned') && Number(slideItem.dataset.index) > 0) {
         setVisibleSlide({ index: 2, animate: false });
     } 
-   if(state.currentSlideIndex === 1) {
+    if(slideItem.classList.contains('slide-cloned') && Number(slideItem.dataset.index < 0)) {
         setVisibleSlide({ index: (slideItems.length - 3), animate: false });
     } 
 }
@@ -201,6 +221,14 @@ function setListeners() {
         })
         
         item.addEventListener('mouseup', onMouseUp);
+
+        //Touch down and up for mobiles
+
+        item.addEventListener('touchstart', (event) => {
+            onTouchStart(event, index);
+        })
+        
+        item.addEventListener('touchend', onTouchEnd);
     })
     
     navNextButton.addEventListener('click', nextSlide);
@@ -210,6 +238,15 @@ function setListeners() {
         clearInterval(slideAuto);
     });
     slideWrapper.addEventListener('mouseleave', setAutoPlay);
+
+    let resizeTimeOut;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeOut);
+        resizeTimeOut = setTimeout(() => {
+            setVisibleSlide({ index: state.currentSlideIndex, animate: true });
+        }, 1000)
+        
+    })
 
 }
 
@@ -227,7 +264,7 @@ function initSlider({ startAtIndex = 0, autoPlay = true, timeInterval = 2000 }) 
 
 initSlider({
     startAtIndex: 0,
-    autoPlay: true,
+    autoPlay: false,
     timeInterval: 2000
 });
 
