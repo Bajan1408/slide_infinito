@@ -264,7 +264,7 @@ function initSlider({ startAtIndex = 0, autoPlay = true, timeInterval = 2000 }) 
 
 initSlider({
     startAtIndex: 0,
-    autoPlay: false,
+    autoPlay: true,
     timeInterval: 2000
 });
 
