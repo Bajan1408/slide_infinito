@@ -4,16 +4,20 @@ const dataSlide = document.querySelector('[data-slide="wrapper"]');
 const slideList = document.querySelector('[data-slide="list"]');
 const navPreviousButton = document.querySelector('[data-slide="nav-previous-button"]');
 const navNextButton = document.querySelector('[data-slide="nav-next-button"]');
-const slideItems = document.querySelectorAll('[data-slide="item"]');
+let slideItems = document.querySelectorAll('[data-slide="item"]');
 const controlsWrapper = document.querySelector('[data-slide="controls-wrapper"]');
+const slideWrapper = document.querySelector('.slide-wrapper');
 let controlButtons;
+let slideAuto;
 
 const state = {
     startingPoint: 0,
     savedPositionMouse: 0,
     currentPoint: 0,
     movement: 0,
-    currentSlideIndex: 0
+    currentSlideIndex: 0,
+    autoPlay: true, 
+    timeInterval: 2000
 }
 
 function translateSlide({ position }) {
@@ -41,7 +45,7 @@ function setVisibleSlide({ index, animate }) {
     }
     const position = getCenterPosition({ index });
     state.currentSlideIndex = index;
-    slideList.style.transition = animate === true ? `transform .7s` : `none`;
+    slideList.style.transition = animate === true ? `transform .5s` : `none`;
     activeControlButton({ index });
     translateSlide({ position: position });
 }
@@ -70,24 +74,47 @@ function createControlButtons() {
 }
 
 function activeControlButton({ index }) {
-    const controlButton = controlButtons[index];
+    const slideItem = slideItems[index];
+    const dataIndex = Number(slideItem.dataset.index);
+    const controlButton = controlButtons[dataIndex];
     controlButtons.forEach((contolButtonItem) => {
         contolButtonItem.classList.remove('active');
     })
-    controlButton.classList.add('active');
+    if(controlButton) controlButton.classList.add('active');
 }
 
 function createSlideClones() {
     //fazendo uma clonagem profunda dos elementos (deep clone)
     const firstSlide = slideItems[0].cloneNode(true);
-    const secondtSlide = slideItems[1].cloneNode(true);
-    const lastSlide = slideItems[slideItems.length - 1].cloneNode(true);
-    const penultimateSlide = slideItems[slideItems.length - 2].cloneNode(true);
+    firstSlide.classList.add('slide-cloned');
+    //firstSlide.setAttribute('data-index', "8");
+    
+    //outra forma de atribuir o data-index abaixo:
 
-    slideItems.appendChild(firstSlide);
-    slideItems.appendChild(secondtSlide);
-    slideItems.appendChild(lastSlide);
-    slideItems.appendChild(penultimateSlide);
+    firstSlide.dataset.index = slideItems.length;
+
+    const secondtSlide = slideItems[1].cloneNode(true);
+    secondtSlide.classList.add('slide-cloned');
+    secondtSlide.setAttribute('data-index', slideItems.length + 1);
+
+    const lastSlide = slideItems[slideItems.length - 1].cloneNode(true);
+    lastSlide.classList.add('slide-cloned');
+    lastSlide.setAttribute('data-index', -1);
+
+    const penultimateSlide = slideItems[slideItems.length - 2].cloneNode(true);
+    penultimateSlide.classList.add('slide-cloned');
+    penultimateSlide.setAttribute('data-index', -2);
+
+    slideList.append(firstSlide);
+    slideList.append(secondtSlide);
+    
+    slideList.prepend(lastSlide);
+    slideList.prepend(penultimateSlide);
+    
+    
+    slideItems = document.querySelectorAll('[data-slide="item"]');
+
+    console.log('createSlideClones passou por aqui...');
 }
 
 function onMouseDown(event, index) {
@@ -96,27 +123,18 @@ function onMouseDown(event, index) {
     state.currentPoint = event.clientX - state.savedPositionMouse;
     state.currentSlideIndex = index;
     slideList.style.transition = `none`;
-    //console.log('Eu sou o index do mousedown ', state.currentSlideIndex);
-    //console.log('Eu sou o event.clientX, pixel do mousedown', event.clientX);
-    //console.log('apertei o botão do mouse');
     item.addEventListener('mousemove', onMouseMove);
-    
-    //console.log('Ponto de partida', startingPoint);
 }
 
 function onMouseMove(event) {
     state.movement = event.clientX - state.startingPoint;
     const position = event.clientX - state.currentPoint;
-    console.log(`Pixel do mousemove ${event.clientX} - Ponto de partida ${state.startingPoint} = ${state.movement}`);
-    //console.log('Quantidade de pixels movimentada: ', moviment);
-    //slideList.style.transform = `translateX(${position}px)`;
     translateSlide({ position: position });
 }
 
 function onMouseUp(event) {
     const item = event.currentTarget;
     const slideWidth = item.clientWidth;
-    //console.log(`Eu sou o valor do slidewidth: ${slideWidth}`);
     
     if(state.movement < -150) {
         nextSlide();
@@ -146,16 +164,23 @@ function onMouseUp(event) {
 }
 
 function onControlButtonClick(index) {
-    setVisibleSlide({ index, animate: true });
+    setVisibleSlide({ index: index + 2, animate: true });
 }
 
 function onSlideListTransitionEnd() {
     if(state.currentSlideIndex === (slideItems.length - 2)) {
         setVisibleSlide({ index: 2, animate: false });
     } 
-    if(state.currentSlideIndex === 1) {
-        setVisibleSlide({ index: (slideItems.length - 2), animate: false });
+   if(state.currentSlideIndex === 1) {
+        setVisibleSlide({ index: (slideItems.length - 3), animate: false });
     } 
+}
+
+function setAutoPlay() {
+    if(state.autoPlay) {
+        slideAuto = setInterval(nextSlide, state.timeInterval);
+    }
+    
 }
 
 function setListeners() {
@@ -181,17 +206,30 @@ function setListeners() {
     navNextButton.addEventListener('click', nextSlide);
     navPreviousButton.addEventListener('click', previousSlide);
     slideList.addEventListener('transitionend', onSlideListTransitionEnd);
+    slideWrapper.addEventListener('mouseenter', () => {
+        clearInterval(slideAuto);
+    });
+    slideWrapper.addEventListener('mouseleave', setAutoPlay);
 
 }
 
-function initSlider() {
+function initSlider({ startAtIndex = 0, autoPlay = true, timeInterval = 2000 }) {
+    state.autoPlay = autoPlay;
+    state.timeInterval = timeInterval;
     createControlButtons();
-    setListeners();
     createSlideClones();
-    setVisibleSlide({ index: 2, animate: true });
+    setListeners();
+    
+    setVisibleSlide({ index: startAtIndex + 2, animate: true });
+
+    setAutoPlay();
 }
 
-initSlider();
+initSlider({
+    startAtIndex: 0,
+    autoPlay: true,
+    timeInterval: 2000
+});
 
 
 
